@@ -1,0 +1,51 @@
+version: '2.2'
+
+# Containers
+services:  
+  # Database
+  vg_msg_queue_db:
+    image: mariadb:10.2
+    container_name: vg_msg_queue_db
+    ports:
+      - 3309:3306
+    environment:
+      - MYSQL_DATABASE=vg_msg_queue
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_ROOT_USER=root
+    networks: 
+      - vg_msg_queue_net
+  
+  # Phpmyadmin
+  vg_msg_queue_pma:
+    image: phpmyadmin/phpmyadmin:4.7
+    container_name: vg_msg_queue_pma
+    ports:
+      - 7070:80
+    environment:
+      - PMA_HOST=vg_msg_queue_db
+    networks: 
+      - vg_msg_queue_net
+  
+  # Application & server
+  vg_msg_queue_app:
+    build: ./docker
+    image: vg_msg_queue_app:0.7
+    container_name: vg_msg_queue_app
+    working_dir: /var/www/vg_msg_queue
+    volumes:
+      - .:/var/www/vg_msg_queue
+      - ./docker/app/live.env:/var/www/vg_msg_queue/.env
+      - ./docker/apache/000-default.conf:/etc/apache2/sites-enabled/000-default.conf
+    entrypoint:
+      - php-fpm
+    depends_on:
+      - vg_msg_queue_db
+    ports:
+      - 7000:80
+    networks: 
+      - vg_msg_queue_net
+
+# Virtual networks
+networks: 
+  vg_msg_queue_net:
+    driver: bridge

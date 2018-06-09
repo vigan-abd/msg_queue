@@ -1,0 +1,2 @@
+*.sqlite
+firebase/cloud-functions/functions/node_modules
